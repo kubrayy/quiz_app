@@ -13,7 +13,7 @@ ui.btn_next.addEventListener("click",function(){
   if (quiz.sorular.length != quiz.soruIndex + 1) {
     quiz.soruIndex += 1;
     clearInterval(counter);
-    startTimer(5);
+    startTimer(15);
     ui.soruGoster(quiz.soruGetir());
     ui.soruSayisiniGoster(quiz.soruIndex + 1, quiz.sorular.length)
     ui.btn_next.classList.remove("show");
