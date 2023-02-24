@@ -1,91 +1,87 @@
-// OOP: Nesne Tabanlı Programlama
-
-function Soru(soruMetni, cevapSecenekleri, dogruCevap) {
-  this.soruMetni = soruMetni;
-  this.cevapSecenekleri = cevapSecenekleri;
-  this.dogruCevap = dogruCevap;
-}
-
-Soru.prototype.cevabiKontrolEt = function(cevap) {
-  return cevap === this.dogruCevap
-}
-
-let sorular = [
-  new Soru("1-Hangisi javascript paket yönetim uygulasıdır?", { a: "Node.js", b: "Typescript", c: "Npm",d:"nuget" }, "c"),
-  new Soru("2-Hangisi javascript paket yönetim uygulasıdır?", { a: "Node.js", b: "Typescript", c: "Npm" }, "c"),
-  new Soru("3-Hangisi javascript paket yönetim uygulasıdır?", { a: "Node.js", b: "Typescript", c: "Npm" }, "c"),
-  new Soru("4-Hangisi javascript paket yönetim uygulasıdır?", { a: "Node.js", b: "Typescript", c: "Npm" }, "c")
-];
-
-function Quiz(sorular) {
-  this.sorular = sorular;
-  this.soruIndex = 0;
-}
-
-Quiz.prototype.soruGetir = function() {
-  return this.sorular[this.soruIndex];
-}
-
 const quiz = new Quiz(sorular);
+const ui = new UI();
 
-document.querySelector(".btn_start").addEventListener("click", function() {
-  document.querySelector(".quiz_box").classList.add("active");
-  soruGoster(quiz.soruGetir());
-  document.querySelector(".next_btn").classList.remove("show");
+ui.btn_start.addEventListener("click", function() {
+  ui.quiz_box.classList.add("active");
+  startTimer(15);
+  ui.soruGoster(quiz.soruGetir());
+  ui.soruSayisiniGoster(quiz.soruIndex + 1, quiz.sorular.length)
+  ui.btn_next.classList.remove("show");
 })
 
-document.querySelector(".next_btn").addEventListener("click",function(){
+ui.btn_next.addEventListener("click",function(){
   if (quiz.sorular.length != quiz.soruIndex + 1) {
     quiz.soruIndex += 1;
-    soruGoster(quiz.soruGetir());
-    document.querySelector(".next_btn").classList.remove("show");
+    clearInterval(counter);
+    startTimer(5);
+    ui.soruGoster(quiz.soruGetir());
+    ui.soruSayisiniGoster(quiz.soruIndex + 1, quiz.sorular.length)
+    ui.btn_next.classList.remove("show");
 } else {
+    clearInterval(counter);
     console.log("quiz bitti");
+    ui.quiz_box.classList.remove("active");
+    ui.score_box.classList.add("active");
+    ui.skorGoster(quiz.sorular.length, quiz.dogruCevapSayisi);
 }
-  
 });
 
-const option_list = document.querySelector(".option_list");
-const correctIcon = '<div class="icon"><i class="fas fa-check"></i></div>';
-const incorrectIcon = '<div class="icon"><i class="fas fa-times"></i></div>';
 
-function soruGoster(soru){
-  let question = `<span>${soru.soruMetni}</span>`;
-  let options ='';
-  
-  for(let cevap in soru.cevapSecenekleri){
-    options +=
-    `
-      <div class="option">
-        <span><b>${cevap}</b>: ${soru.cevapSecenekleri[cevap]}</span>
-      </div>
-    `;
-  }
-  document.querySelector(".question_text").innerHTML = question;
-  document.querySelector(".option_list").innerHTML = options;
+//Testi bitir  ve yeniden başlat için çalışan metotlar.
+ui.btn_quit.addEventListener("click",function(){
+  window.location.reload();
+});
+ui.btn_replay.addEventListener("click",function(){
+  quiz.soruIndex = 0;
+  quiz.dogruCevapSayisi = 0;
+  ui.btn_start.click();
+  ui.score_box.classList.remove("active"); //yeniden başlattığımda, sonda gösterilen skor_box kapatmış oldum.
+});
 
-  const option = option_list.querySelectorAll(".option");
-
-  for(let opt of option){
-    opt.setAttribute("onclick","optionSelected(this)")
-  }
-}
 
 function optionSelected(option){
+  clearInterval(counter); //seçim yaptığımda süreyi temizledim.
   let cevap = option.querySelector("span b").textContent;
   let soru = quiz.soruGetir();
 
   if(soru.cevabiKontrolEt(cevap)){
+    quiz.dogruCevapSayisi += 1;
     option.classList.add("correct");
-    option.insertAdjacentHTML("beforeend",correctIcon);
+    option.insertAdjacentHTML("beforeend", ui.correctIcon);
   } else {
     option.classList.add("incorrect");
-    option.insertAdjacentHTML("beforeend",incorrectIcon);
+    option.insertAdjacentHTML("beforeend", ui.incorrectIcon);
   }
 
-  for(let i=0; i<option_list.children.length; i++){
-    option_list.children[i].classList.add("disabled");
+  for(let i=0; i<ui.option_list.children.length; i++){
+    ui.option_list.children[i].classList.add("disabled");
   }
-  document.querySelector(".next_btn").classList.add("show");
+  ui.btn_next.classList.add("show");
 
 }
+
+let counter;
+function startTimer(time){
+  counter = setInterval(timer,1000);
+  function timer(){
+    ui.time_second.textContent = time;
+    time--;
+    if(time<0){
+      clearInterval(counter);
+      ui.time_text.textContent = "Süre bitti."
+
+      let cevap = quiz.soruGetir().dogruCevap;
+
+      for(let option of ui.option_list.children){
+        if(option.querySelector("span b").textContent == cevap){
+          option.classList.add("correct");
+          option.insertAdjacentHTML("beforeend",ui.correctIcon);
+        }
+
+        option.classList.add("disabled");
+      }
+      ui.btn_next.classList.add("show");
+    }
+  }
+}
+
